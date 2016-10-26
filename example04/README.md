@@ -127,5 +127,5 @@ docker-compose build
 
 ###### Run the services
 ```
-docker-compse up
+docker-compose up
 ```
