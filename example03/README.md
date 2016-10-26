@@ -1,7 +1,9 @@
 # Python Hello World Server with a Dockerfile
 
+Docker images are the backbone of docker. Applications packaged into images can easily and portably be run anywhere where docker is available. In this example, we'll walk through the creation of a simple "Hello World" python server using a Dockerfile.
+
 ## Dockerfile
-#### Create the Docerfile
+#### Create the Dockerfile
 ```
 touch Dockerfile
 ```
