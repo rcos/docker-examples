@@ -98,6 +98,8 @@ services:
     depends_on:
       - postgres
       - redis
+    volumes:
+      - ./data:/opt/webapp/
 
   postgres:
     image: postgres:9.5
