@@ -43,9 +43,6 @@ ADD . /opt/webapp/
 
 The ADD instruction copies new files, directories or remote file URLs from <src> and adds them to the filesystem of the container at the path <dest>.
 
-
-
-
 ###### Lets add an environment variable to the container
 ```
 ENV FLASK_APP=hello.py
@@ -78,6 +75,32 @@ There can only be one `CMD` instruction in a Dockerfile. If you list more than o
 
 The main purpose of a `CMD` is to provide defaults for an executing container. These defaults can include an executable, or they can omit the executable, in which case you must specify an `ENTRYPOINT` instruction as well.
 
+### Full dockerfile
+
+```bash
+# Comments in Dockerfiles
+FROM python:3.5
+
+# Update and install dependencies
+RUN apt-get update
+RUN pip install Flask
+
+# Add code
+ADD . /opt/webapp/
+
+# Set the working directory
+WORKDIR /opt/webapp
+
+# Set environment variables
+ENV FLASK_APP=hello.py
+
+# Expose the application's port
+EXPOSE 5000
+
+# Run the application
+CMD ["flask", "run", "--host=0.0.0.0"]
+```
+
 ## Build and run the Dockerfile
 
 ###### Build the Dockerfile with the build command
@@ -85,7 +108,7 @@ The main purpose of a `CMD` is to provide defaults for an executing container. T
 docker build <container-name> .
 ```
 
-###### Run the container with the run command and open the port for the web Server
+###### Run the container with the run command and open the port for the web server
 ```
 docker run -p 5000:5000 <container-name> .
 ```
