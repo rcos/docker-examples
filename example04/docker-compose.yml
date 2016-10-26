@@ -1,0 +1,25 @@
+version: '2.0'
+services:
+  app:
+    build: app
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./data:/opt/webapp/
+
+  postgres:
+    image: postgres:9.5
+    expose:
+      - "5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+
+  redis:
+    image: redis
+    expose:
+      - "6379"
+    volumes:
+      - ./data/redis/:/var/lib/redis/data/
