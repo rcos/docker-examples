@@ -4,7 +4,7 @@ In this example, we will create a `docker-compose.yml` file to orchestrate our c
 
 # Writing a docker compose file
 
-Our docker compose file will orchestrate our three services: our python app, PostgreSQL, and Redis. This will make it very easy to build and link our containers, and add new volumes. As we saw before, many common services are available pre-built, which we will take advantage of. The compose file should be YAML named `docker-compose.yml`.
+Our docker compose file will orchestrate our four services: our python backend, an angular frontend, PostgreSQL, and Redis. This will make it very easy to build and link our containers, and add new volumes. As we saw before, many common services are available pre-built, which we will take advantage of. The compose file should be YAML named `docker-compose.yml`.
 
 ## Docker compose setup
 
@@ -43,21 +43,21 @@ This is all we need for a basic postgres setup, but by default our data will onl
     expose:
       - "6379"
 ```      
-###### Create data volume for Redis
+###### (Optional) Create data volume for Redis
 ```
     volumes:
       - ./data/redis/:/var/lib/redis/data/
 ```
 
-##### Add our python app to compose
+##### Add our python backend to compose
 
 Instead of using a hosted Docker image, we can tell docker compose to build from a local Dockerfile by using the `build` command.
 
-###### Use the Dockerfile located in `app/`
+###### Use the Dockerfile located in `backend/`
 
 ```
-  app:
-    build: app
+  backend:
+    build: backend
 ```
 
 ###### Add depdendencies
@@ -66,7 +66,7 @@ Instead of using a hosted Docker image, we can tell docker compose to build from
       - postgres
       - redis
 ```
-`depends_on` links the containers, and also specifies that `postgres` and `redis` should be started whenever we run our `app` service.
+`depends_on` links the containers, and also specifies that `postgres` and `redis` should be started whenever we run our `backend` service.
 
 ###### Expose ports
 ```
@@ -77,43 +77,81 @@ Instead of using a hosted Docker image, we can tell docker compose to build from
 The `ports` command exposes the specified port to the host machine.
 
 ###### Add volumes
-To make development a little easier, we can map the directory containing the application code to a volume connected to our `app` service.
+To make development a little easier, we can map the directory containing the application code to a volume connected to our `backend` service.
 
 ```
     voumes:
-      - ./app:/opt/webapp
+      - ./backend:/usr/src/app
 ```
 
-This effectively links the local directory `data` to the directory within the container that contains the application code, allowing us to edit the code without having to rebuild.
+This effectively links the local directory to the directory within the container that contains the application code, allowing us to edit the code without having to rebuild.
+
+##### Repeat for the Angular frontend
+
+Instead of using a hosted Docker image, we can tell docker compose to build from a local Dockerfile by using the `build` command like we did before.
+
+###### Use the Dockerfile located in `frontend/`
+
+```
+  backend:
+    build: frontend
+```
+
+###### Add depdendencies
+```
+    depends_on:
+      - backend
+```
+`depends_on` links the containers, and also specifies that `backend` should be started before the frontend is started.
+
+###### Expose ports
+```
+    ports:
+      - "4200:4200"
+```
+
+The `ports` command exposes the specified port to the host machine.
+
+###### Add volumes
+To make development a little easier, we can map the directory containing the application code to a volume connected to our `frontend` service.
+
+```
+    voumes:
+      - ./frontend:/usr/src/app
+```
 
 ## Full docker-compose.yml
 
 ```
 version: '2.0'
 services:
-  app:
-    build: app
+  backend:
+    build: ./backend
     ports:
       - "5000:5000"
     depends_on:
       - postgres
       - redis
     volumes:
-      - ./data:/opt/webapp/
+      - ./backend:/usr/src/app
+  
+  frontend:
+    build: ./frontend
+    ports:
+      - "4200:4200"
+    depends_on:
+      - backend
+    command: "ng serve --host 0.0.0.0 --disable-host-check"
 
   postgres:
     image: postgres:9.5
     expose:
       - "5432"
-    volumes:
-      - ./data/postgres:/var/lib/postgresql/data
 
   redis:
     image: redis
     expose:
       - "6379"
-    volumes:
-      - ./data/redis/:/var/lib/redis/data/
 
 ```
 
@@ -129,3 +167,9 @@ docker-compose build
 ```
 docker-compose up
 ```
+
+## Using the app
+
+In your web browser, visit `localhost:4200` to see the frontend!
+
+To access the backend directly, visit `localhost:5000`.
