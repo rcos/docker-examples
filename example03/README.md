@@ -105,12 +105,12 @@ CMD ["flask", "run", "--host=0.0.0.0"]
 
 ###### Build the Dockerfile with the build command
 ```
-docker build <container-name> .
+docker build -t <container-name> .
 ```
 
 ###### Run the container with the run command and open the port for the web server
 ```
-docker run -p 5000:5000 <container-name> .
+docker run -p 5000:5000 <container-name>
 ```
 
 ## See the web Server
