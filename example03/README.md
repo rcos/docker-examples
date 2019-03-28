@@ -50,7 +50,7 @@ ENV FLASK_APP=hello.py
 The `ENV` instruction sets the environment variable `<key>` to the value `<value>`.
 This value will be in the environment of all “descendant” Dockerfile commands and can be replaced inline in many as well.
 
-###### Lets add the 'hello.py' file from our system to the container
+###### Set the working directory for our container
 ```
 WORKDIR /opt/webapp
 ```
