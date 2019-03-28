@@ -97,7 +97,7 @@ Instead of using a hosted Docker image, we can tell docker compose to build from
     build: frontend
 ```
 
-###### Add depdendencies
+###### Add dependencies
 ```
     depends_on:
       - backend
