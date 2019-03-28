@@ -12,6 +12,7 @@ Adding Postgres and Redis to the stack and linking them to our python applicatio
 
 ##### Add PostgreSQL from official image
 ```
+services:
   postgres:
     image: postgres:9.5
 ```
@@ -119,6 +120,12 @@ To make development a little easier, we can map the directory containing the app
     voumes:
       - ./frontend:/usr/src/app
 ```
+###### Add the frontend command
+Start up the fontend service
+
+```
+    command: "ng serve --host 0.0.0.0 --disable-host-check"
+```
 
 ## Full docker-compose.yml
 
@@ -154,6 +161,10 @@ services:
       - "6379"
 
 ```
+
+# Get the rest of the files
+Make sure you download the rest of the repository to get the frontend and backend 
+directories with their Dockerfile and the data volumes we set up.
 
 # Running Docker Compose
 From within the directory containing our `docker-compose.yml`:
