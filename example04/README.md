@@ -2,170 +2,187 @@
 
 In this example, we will create a `docker-compose.yml` file to orchestrate our containers to make running our application easy.
 
+This example is partially derived from a Docker Labs example,
+[https://github.com/docker/labs/tree/master/developer-tools/nodejs/porting/](https://github.com/docker/labs/tree/master/developer-tools/nodejs/porting/)
+
+* We will use 2 images to package the application
+  * one image for the database
+  * one image for the application
+* All needed code other than the `Dockerfile` and the `docker-compose.yml` file can be found in the `messageApp` directory.
+
+## The application
+
+* There are several possibilities to create the image
+  * extend an official Linux distribution image (Ubuntu, CentOS, ...) and install Node.js runtime
+  * use the official Node.js image (https://store.docker.com/images/node)
+
+We'll go for the second option as it offers an optimized image.
+
+## Database
+
+* Usage of the official [MongoDB image](https://store.docker.com/images/mongo)
+
+# Start by setting up a Node.js container
+
+## Dockerfile
+
+We'll use the following Dockerfile to build our application's image:
+
+```
+# Use node 10.15.3 LTS
+FROM node:10.15.3
+ENV LAST_UPDATED 20190325T175400
+
+# Copy source code
+COPY . /app
+
+# Change working directory
+WORKDIR /app
+
+# Install dependencies
+RUN npm install
+
+# Fix up some of the issues
+RUN npm audit fix
+
+# Expose API port to the outside
+EXPOSE 1337
+
+# Launch application
+CMD ["node","app.js"]
+```
+First define the base image as a version of node.
+
+```
+# Use node 10.15.3 LTS
+FROM node:10.15.3
+ENV LAST_UPDATED 20190325T175400
+```
+Copy everything from the current directory to the ***/app*** directory in the container and make that directory the working directory
+
+```
+# Copy source code
+COPY . /app
+
+# Change working directory
+WORKDIR /app
+```
+Get your node dependecies installed and fixed up.
+
+```
+# Install dependencies
+RUN npm install
+
+# Fix up some of the issues
+RUN npm audit fix
+```
+Set up the communications port.
+
+```
+# Expose API port to the outside
+EXPOSE 1337
+```
+
+And launch the node server
+
+```
+# Launch application
+CMD ["node","app.js"]
+
+```
+
+## Image creation
+
+* Create the **Dockerfile** in your current directory
+
+* Create the docker image using ```docker build -t message-app .```
+
+* List all images available on the Docker host ```docker images```
+
+## Now run it ...
+
+```
+$ docker run message-app
+npm info it worked if it ends with ok
+...
+error: A hook (`orm`) failed to load!
+error: Error: Failed to connect to MongoDB.  Are you sure your configured Mongo instance is running?
+ Error details:
+{ [MongoError: connect ECONNREFUSED 127.0.0.1:27017]
+  name: 'MongoError',
+  message: 'connect ECONNREFUSED 127.0.0.1:27017' }]
+  originalError:
+   { [MongoError: connect ECONNREFUSED 127.0.0.1:27017]
+     name: 'MongoError',
+     message: 'connect ECONNREFUSED 127.0.0.1:27017' } }
+```
+
+**The application cannot connect to a database as we did not provide external db information nor container running mongodb**
+
+
 # Writing a docker compose file
 
-Our docker compose file will orchestrate our four services: our python backend, an angular frontend, PostgreSQL, and Redis. This will make it very easy to build and link our containers, and add new volumes. As we saw before, many common services are available pre-built, which we will take advantage of. The compose file should be YAML named `docker-compose.yml`.
+We can fix this by using a docker compose file to launch both of our services at the same time. The compose file should be YAML named `docker-compose.yml` and you can create it in the `messageApp` directory alongside the `Dockerfile` we used to create the node app.
 
-## Docker compose setup
+Overall, the `docker-compose.yml` should be
 
-Adding Postgres and Redis to the stack and linking them to our python application is very easy with compose.
-
-##### Add PostgreSQL from official image
 ```
-version: '2.0'
+version: '3'
 services:
-  postgres:
-    image: postgres:9.5
-```
-This will add PostgreSQL version 9.5 from the corresponding official base image.
-
-###### Expose the necessary ports
-```
-    expose: "5432"
-```
-
-The `expose` command exposes the port to other services within our docker-compose setup, but not the the host machine.
-
-This is all we need for a basic postgres setup, but by default our data will only exist within the docker volume, and will therefore be destroyed if we destroy our docker setup. We should create a volume that maps to a local directory.
-
-```
+  mongo:
+    image: mongo:4.0.7
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
-```
-
-##### Add Redis from the official image
-```
-  redis:
-    image: redis
-```
-
-###### Expose ports for Redis
-
-```
+      - mongo-data:/data/db
     expose:
-      - "6379"
-```      
-###### (Optional) Create data volume for Redis
-```
-    volumes:
-      - ./data/redis/:/var/lib/redis/data/
-```
-
-##### Add our python backend to compose
-
-Instead of using a hosted Docker image, we can tell docker compose to build from a local Dockerfile by using the `build` command.
-
-###### Use the Dockerfile located in `backend/`
-
-```
-  backend:
-    build: backend
-```
-
-###### Add depdendencies
-```
-    depends_on:
-      - postgres
-      - redis
-```
-`depends_on` links the containers, and also specifies that `postgres` and `redis` should be started whenever we run our `backend` service.
-
-###### Expose ports
-```
+      - "27017"
+  app:
+    build: .
     ports:
-      - "5000:5000"
-```
-
-The `ports` command exposes the specified port to the host machine.
-
-###### Add volumes
-To make development a little easier, we can map the directory containing the application code to a volume connected to our `backend` service.
-
-```
-    volumes:
-      - ./backend:/usr/src/app
-```
-
-This effectively links the local directory to the directory within the container that contains the application code, allowing us to edit the code without having to rebuild.
-
-##### Repeat for the Angular frontend
-
-Instead of using a hosted Docker image, we can tell docker compose to build from a local Dockerfile by using the `build` command like we did before.
-
-###### Use the Dockerfile located in `frontend/`
-
-```
-  frontend:
-    build: frontend
-```
-
-###### Add dependencies
-```
+            - "1337:1337"
+    links:
+      - mongo
     depends_on:
-      - backend
-```
-`depends_on` links the containers, and also specifies that `backend` should be started before the frontend is started.
-
-###### Expose ports
-```
-    ports:
-      - "4200:4200"
+      - mongo
+    environment:
+      - MONGO_URL=mongodb://mongo/messageApp
+volumes:
+  mongo-data:
 ```
 
-The `ports` command exposes the specified port to the host machine.
-
-###### Add volumes
-To make development a little easier, we can map the directory containing the application code to a volume connected to our `frontend` service.
+Define the file as a version 3 YAML, and specify `mongodb` from one of the base images. Use the `mongo-data` volume as persistent storage and expose port `27017` for use among the services in this file.
 
 ```
-    volumes:
-      - ./frontend:/usr/src/app
-```
-###### Add the frontend command
-Start up the fontend service
-
-```
-    command: "ng serve --host 0.0.0.0 --disable-host-check"
-```
-
-## Full docker-compose.yml
-
-```
-version: '2.0'
+version: '3'
 services:
-  backend:
-    build: ./backend
-    ports:
-      - "5000:5000"
-    depends_on:
-      - postgres
-      - redis
+  mongo:
+    image: mongo:4.0.7
     volumes:
-      - ./backend:/usr/src/app
-  
-  frontend:
-    build: ./frontend
-    ports:
-      - "4200:4200"
-    depends_on:
-      - backend
-    command: "ng serve --host 0.0.0.0 --disable-host-check"
-
-  postgres:
-    image: postgres:9.5
+      - mongo-data:/data/db
     expose:
-      - "5432"
-
-  redis:
-    image: redis
-    expose:
-      - "6379"
-
+      - "27017"
 ```
 
-# Get the rest of the files
-Make sure you download the rest of the repository to get the frontend and backend 
-directories with their Dockerfile and the data volumes we set up.
+Define our application as an image that needs to be built in the current directory, expose port `1337` for external communication, make it link to and depend on `mongo` and set an evironment variable so it knows how to communicate with the database.
+
+```
+  app:
+    build: .
+    ports:
+            - "1337:1337"
+    links:
+      - mongo
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URL=mongodb://mongo/messageApp
+```
+
+Finally, set up a named volume for persistent storage.
+
+```
+volumes:
+  mongo-data:
+```
 
 # Running Docker Compose
 From within the directory containing our `docker-compose.yml`:
@@ -182,6 +199,55 @@ docker-compose up
 
 ## Using the app
 
-In your web browser, visit `localhost:4200` to see the frontend!
+Now in another terminal, try:
 
-To access the backend directly, visit `localhost:5000`.
+* Get current list of messages
+  * ```curl http://localhost:1337/message```
+
+```
+[]
+```
+
+* Create new messages
+  * ```curl -XPOST http://localhost:1337/message?text=hello```
+  * ```curl -XPOST http://localhost:1337/message?text=hola```
+  
+* Get list of messages
+  * ```curl http://localhost:1337/message```
+
+```
+[
+  {
+    "text": "hello",
+    "createdAt": "2015-11-08T13:15:15.363Z",
+    "updatedAt": "2015-11-08T13:15:15.363Z",
+    "id": "5638b363c5cd0825511690bd" 
+  },
+  {
+    "text": "hola",
+    "createdAt": "2015-11-08T13:15:45.774Z",
+    "updatedAt": "2015-11-08T13:15:45.774Z",
+    "id": "5638b381c5cd0825511690be"
+  }
+]
+```
+* Modify a message
+  * ```curl -XPUT http://localhost:1337/message/5638b363c5cd0825511690bd?text=hey```
+
+* Delete a message
+  * ```curl -XDELETE http://localhost:1337/message/5638b381c5cd0825511690be```
+
+* Get list of messages
+  * ```curl http://localhost:1337/message```
+
+```
+[
+  {
+    "text": "hey",
+    "createdAt": "2015-11-08T13:15:15.363Z",
+    "updatedAt": "2015-11-08T13:19:40.179Z",
+    "id": "5638b363c5cd0825511690bd"
+  }
+]
+```
+Make sure your `XPUT`s and `XDELETE`s use valid IDs instead of the ones in the example.
