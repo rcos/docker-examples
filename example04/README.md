@@ -80,7 +80,7 @@ The `ports` command exposes the specified port to the host machine.
 To make development a little easier, we can map the directory containing the application code to a volume connected to our `backend` service.
 
 ```
-    voumes:
+    volumes:
       - ./backend:/usr/src/app
 ```
 
