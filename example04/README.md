@@ -12,6 +12,7 @@ Adding Postgres and Redis to the stack and linking them to our python applicatio
 
 ##### Add PostgreSQL from official image
 ```
+version: '2.0'
 services:
   postgres:
     image: postgres:9.5
@@ -117,7 +118,7 @@ The `ports` command exposes the specified port to the host machine.
 To make development a little easier, we can map the directory containing the application code to a volume connected to our `frontend` service.
 
 ```
-    voumes:
+    volumes:
       - ./frontend:/usr/src/app
 ```
 ###### Add the frontend command
