@@ -93,7 +93,7 @@ Instead of using a hosted Docker image, we can tell docker compose to build from
 ###### Use the Dockerfile located in `frontend/`
 
 ```
-  backend:
+  frontend:
     build: frontend
 ```
 
