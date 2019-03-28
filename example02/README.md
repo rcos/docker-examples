@@ -32,4 +32,4 @@ To stop the container, run `docker stop <container-name>`
 To remove the container, run `docker rm <container-name>`
 
 To see images in docker, run `docker images`  
-To remove container, run `docker rmi <images-id>`  
+To remove image, run `docker rmi <images-id>`  
