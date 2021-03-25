@@ -21,7 +21,7 @@ The `-d` flag runs the application in the background.
 Next, we are going to start the Rocket.Chat application linked to this mongo instance:  
 `docker run --name rocketchat -p 3000:3000 --env ROOT_URL=http://localhost --link db:db -d rocket.chat:0.62`  
 The `-p` flag publishes the container's port to the host's.  
-The `--env` flag adds and environment variable to the container.     
+The `--env` flag adds an environment variable to the container.     
 The `--link` flag adds a link to another container   
 >Links allow containers to discover each other and securely transfer information about one container to another container. The recipient can then access select data about the source.
 
