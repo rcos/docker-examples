@@ -93,7 +93,7 @@ CMD ["node","app.js"]
 
 ## Image creation
 
-* Create the **Dockerfile** in your current directory
+* Create the **Dockerfile** in the ```messageApp``` directory
 
 * Create the docker image using ```docker build -t message-app .```
 
